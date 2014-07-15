@@ -106,7 +106,11 @@
   for a complete topological sort"
   ([successors start]
      (topsort-component successors start #{} #{}))
+  ([successors start throw-on-cycle?]
+     (topsort-component successors start #{} #{} throw-on-cycle?))
   ([successors start seen explored]
+     (topsort-component successors start seen explored false))
+  ([successors start seen explored throw-on-cycle?]
      (loop [seen seen
             explored explored
             result ()
@@ -117,7 +121,12 @@
                seen (conj seen v)
                us (remove explored (successors v))]
            (if (seq us)
-             (when-not (some seen us)
+             (if (some seen us)
+               (if throw-on-cycle?
+                 (throw (ex-info 
+                         (str "Cycle detected around node: " v)
+                         {:node v}))
+                 nil)
                (recur seen explored result (conj stack (first us))))
              (recur seen (conj explored v) (conj result v) (pop stack))))))))
 

@@ -1,7 +1,8 @@
 (ns loom.test.alg
   (:require [loom.graph :refer :all]
             [loom.alg :refer :all]
-            [clojure.test :refer :all]))
+            [clojure.test :refer :all])
+  (:import (clojure.lang ExceptionInfo)))
 
 ;; http://en.wikipedia.org/wiki/Dijkstra's_algorithm
 (def g1
@@ -195,6 +196,15 @@
        [5 6 7] (topsort g7 5)
        [1 2 4 3] (topsort g14 1)
        [1 2 4] (topsort g15 1)))
+
+(deftest topsort2-throws-on-cycle 
+  (let [g-with-cycle (digraph {:a #{:c :b :d}, :c #{:e}, :b #{:c :d}, :e #{:b}})]
+    (is (thrown? ExceptionInfo (topsort2 g-with-cycle)))
+    (try
+      (topsort2 g-with-cycle)
+      (assert false) ;; should not get here.
+      (catch ExceptionInfo e 
+        (is (not (nil? (:node (ex-data e)))))))))
 
 (deftest breadth-first-test
   (are [expected got] (= expected got)

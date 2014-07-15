@@ -78,6 +78,23 @@ can use these functions."
   ([g start]
      (gen/topsort-component (graph/successors g) start)))
 
+(defn topsort2
+  "Topological sort of a directed acyclic graph (DAG). Throws exception if
+  g contains any cycles."
+  ([g]
+     (loop [seen #{}
+            result ()
+            [n & ns] (seq (nodes g))]
+       (if-not n
+         result
+         (if (seen n)
+           (recur seen result ns)
+           (when-let [cresult (gen/topsort-component
+                               (graph/successors g) n seen seen true)]
+             (recur (into seen cresult) (concat cresult result) ns))))))
+  ([g start]
+     (gen/topsort-component (graph/successors g) start true)))
+
 (defn bf-traverse
   "Traverses graph g breadth-first from start. When option :f is provided,
   returns a lazy seq of (f node predecessor-map depth) for each node traversed.
